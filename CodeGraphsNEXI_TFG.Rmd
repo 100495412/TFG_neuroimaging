@@ -1,0 +1,116 @@
+rm(list = ls())
+cat("\014")
+
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(readxl)
+
+# ===============================
+# 1. CARGA DE DATOS NEXI CC
+# ===============================
+# Selecciona tu archivo "all_NEXI_CC_bueno.xlsx"
+MD_OUT <- read_excel(file.choose())
+MD_limpio <- MD_OUT
+
+# ===============================
+# 2. FORMATEO VARIABLES Y FUSIÓN DE HEMISFERIOS
+# ===============================
+MD_limpio$MouseID <- as.factor(MD_limpio$MouseID)
+
+MD_limpio$Sex <- factor(MD_limpio$Sex,
+                        levels = c(1,2),
+                        labels = c("Male","Female"))
+
+MD_limpio$Diet <- factor(MD_limpio$Diet,
+                         levels = c(1,2),
+                         labels = c("LFLS","HFHS"))
+
+# NUEVO MAPEO: Ajustado estrictamente a tus 3 IDs del nuevo script de MATLAB
+# Los IDs 1 y 2 (hip2_left e hip2_right) se fusionan al llamarse igual: "hip2"
+MD_limpio$ROI <- factor(MD_limpio$ROI,
+                        levels = c(1, 2, 3),
+                        labels = c("hip2", "hip2", "CC"))
+
+# ===============================
+# 3. PROMEDIOS POR RATÓN Y ÁREA FUSIONADA
+# ===============================
+MD_promedios <- MD_limpio %>%
+  group_by(MouseID, Sex, Diet, ROI) %>%
+  summarise(
+    across(c(di, de, f, t_ex), \(x) mean(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Condicion = factor(paste(ifelse(Sex == "Female", "fem", "male"), Diet))
+  )
+
+# ===============================
+# 4. ESTÉTICA
+# ===============================
+parametros <- c("di", "de", "f", "t_ex")
+
+colores_condicion <- c(
+  "fem HFHS"  = "green4",
+  "male HFHS" = "blue3",
+  "fem LFLS"  = "plum2",
+  "male LFLS" = "red3"
+)
+
+# ===============================
+# 5. GENERACIÓN DEL PDF (Fijo en tu nueva carpeta de resultados)
+# ===============================
+ruta_pdf <- "C:/Users/lolan/Downloads/Diffusion_times/Resultados_NEXI_CC/graficas_NEXI_CC_TFG.pdf"
+pdf(ruta_pdf, width = 12, height = 6) # Ajustamos el tamaño horizontal para el formato 1x2
+
+for(param in parametros){
+  
+  areas_presentes <- levels(droplevels(MD_promedios$ROI))
+  lista_plots <- list()
+  
+  for(area_sel in areas_presentes){
+    
+    datos_area <- MD_promedios %>% filter(ROI == area_sel)
+    
+    p <- ggplot(datos_area,
+                aes(x = Condicion,
+                    y = .data[[param]],
+                    fill = Condicion)) +
+      
+      geom_boxplot(alpha = 0.5, outlier.shape = NA, width = 0.5) +
+      geom_jitter(width = 0.12, size = 3.5, aes(color = Condicion)) +
+      
+      scale_fill_manual(values = colores_condicion) +
+      scale_color_manual(values = colores_condicion) +
+      
+      labs(title = paste("Área:", toupper(area_sel)),
+           x = "Grupo / Condición",
+           y = param) +
+      
+      theme_minimal() +
+      theme(
+        legend.position = "none",
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.text.x = element_text(angle = 15, vjust = 0.5, hjust = 1, size = 10),
+        panel.grid.minor = element_blank()
+      )
+    
+    lista_plots[[area_sel]] <- p
+  }
+  
+  # ===============================
+  # PAGINACIÓN (Fila de 1x2: Hip2 a la izquierda y CC a la derecha)
+  # ===============================
+  grid.arrange(
+    grobs = lista_plots,
+    ncol = 2,  # 2 columnas sueltas
+    nrow = 1,  # 1 sola fila
+    top = grid::textGrob(
+      paste("Métrica NEXI:", toupper(param)),
+      gp = grid::gpar(fontsize = 16, font = 2)
+    )
+  )
+}
+
+dev.off()
+cat(paste('\n¡PDF generado con éxito en:', ruta_pdf, '!\n'));

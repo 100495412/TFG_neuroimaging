@@ -1,0 +1,78 @@
+# Limpiar entorno
+rm(list = ls())
+
+# --- 1. CARGAR DATOS (CON CORRECCIÓN PARA EL ERROR) ---
+# He añadido 'fill = TRUE' y una forma de leer que ignora comas extra al final
+DTI_all <- read.csv("S:/mdnovalbos/info_services/blizarbe_lab_share/TFG Lola/Resultados_filtrados/all_DTI_DKI_con_CCN.csv",
+                    sep=";", dec=".", header=TRUE, fill=TRUE)
+
+# IMPORTANTE: Si MATLAB metió columnas vacías al final, nos quedamos solo con las 14 primeras
+if(ncol(DTI_all) > 14) {
+  DTI_all <- DTI_all[, 1:14]
+}
+cols_num <- c("MD","AD","RD","AK","RK","MK","FA_DKI")
+
+DTI_all[cols_num] <- lapply(DTI_all[cols_num], function(x) {
+  as.numeric(gsub(",", ".", x))
+})
+
+DTI_all$ROI <- as.factor(DTI_all$ROI)
+DTI_all$MouseID <- as.factor(DTI_all$MouseID)
+DTI_all$Diet <- as.factor(DTI_all$Diet)
+DTI_all$Sex <- as.factor(DTI_all$Sex)
+DTI_all$Tiempo <- as.factor(DTI_all$Tiempo)
+
+
+# --- 2. SEPARAR EL CUERPO CALLOSO (ROI 8) PARA NO FILTRARLO ---
+# Guardamos el CC intacto en una variable
+CC_data <- DTI_all[DTI_all$ROI == "8", ]
+
+# Creamos una tabla con el resto (1-7) que SÍ pasará por el filtro
+DTI_para_filtrar <- DTI_all[DTI_all$ROI != "8", ]
+
+# --- 3. FUNCIÓN Y CÁLCULO DE LÍMITES (SOLO ÁREAS 1-7) ---
+MD_limits <- function (x) {
+    Q1 <- quantile(x, .25)
+    Q3 <- quantile(x, .75)
+    MT_min <- Q1 - 3*IQR(x)
+    MT_max <- Q3 + 3*IQR(x)
+    MT_limits <- c("minimo" = MT_min, "maximo" = MT_max)
+}
+
+# Calculamos límites usando solo las áreas 1-7
+MD_grouped_limits <- do.call(data.frame, aggregate(DTI_para_filtrar$MD,  
+                                      list(MouseID = DTI_para_filtrar$MouseID,
+                                           Sex = DTI_para_filtrar$Sex,
+                                           Diet = DTI_para_filtrar$Diet,
+                                           Tiempo = DTI_para_filtrar$Tiempo,
+                                           ROI = DTI_para_filtrar$ROI),
+                                      FUN = MD_limits))
+
+# --- 4. FILTRAR OUTLIERS (TU BUCLE ORIGINAL SOBRE ÁREAS 1-7) ---
+n <- 0
+datos.sinOUT <- DTI_para_filtrar[0, ]
+
+for (i in 1:nrow(MD_grouped_limits)){
+  for (j in 1:nrow(DTI_para_filtrar)){
+    
+    if (MD_grouped_limits[i,1] == DTI_para_filtrar[j,1] &&
+        MD_grouped_limits[i,2] == DTI_para_filtrar[j,2] &&
+        MD_grouped_limits[i,3] == DTI_para_filtrar[j,3] &&
+        MD_grouped_limits[i,4] == DTI_para_filtrar[j,4] &&
+        MD_grouped_limits[i,5] == DTI_para_filtrar[j,5] &&
+        DTI_para_filtrar[j,8] > MD_grouped_limits[i,6] && 
+        DTI_para_filtrar[j,8] < MD_grouped_limits[i,7]) {
+              n <- (n + 1)
+              datos.sinOUT <- rbind(datos.sinOUT, DTI_para_filtrar[j,])
+    }
+  }
+} 
+
+# --- 5. UNIR TODO Y GUARDAR ---
+# Pegamos el CC (que no ha pasado por el bucle) con los datos filtrados (1-7)
+MD_OUT <- rbind(datos.sinOUT, CC_data)
+
+colnames(MD_OUT) <- c("Mouse","Sex","Diet","DiffusionTime", "Area",
+                      "X","Y","MD","AD","RD","AK","RK","MK","FA_DKI")
+
+write.csv(MD_OUT, "MD_OUT_con_CCN", row.names = FALSE)

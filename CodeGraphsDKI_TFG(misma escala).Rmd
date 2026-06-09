@@ -1,0 +1,122 @@
+rm(list = ls())
+cat("\014")
+library(dplyr)
+library(lme4)
+library(car)
+library(ggplot2)
+library(gridExtra)
+library(readxl)
+# 1. CARGA DE DATOS
+# Selecciona tu archivo CSV original
+MD_OUT <- read.csv2(file.choose(), header = TRUE)
+MD_limpio <- MD_OUT 
+
+# 2. FORMATEO DE VARIABLES Y ETIQUETADO
+MD_limpio$Mouse <- as.factor(MD_limpio$Mouse)
+
+MD_limpio$Sex <- factor(MD_limpio$Sex, levels = c(1,2), labels = c("Male","Female"))
+MD_limpio$Diet <- factor(MD_limpio$Diet, levels = c(1,2), labels = c("LFLS","HFHS"))
+
+# Agrupamos las áreas y añadimos el Cuerpo Calloso (asumiendo que es el nivel 8)
+MD_limpio$Area <- factor(MD_limpio$Area,
+                         levels = c(1,2,3,4,5,6,7,8),
+                         labels = c("hip2", "hip2", "hip", "hip", 
+                                    "Hyp", "Nac", "Nac", "CC"))
+
+MD_limpio$DiffusionTime <- factor(MD_limpio$DiffusionTime,
+                                  levels = c("DKI_1_1","DKI_2_1","DKI_3_1","DKI_4_1"),
+                                  labels = c("20","25","30","35"))
+
+# Multiplicar por 1000 SOLO en CC
+MD_limpio <- MD_limpio %>%
+  mutate(
+    MD = ifelse(Area == "CC", MD * 1000, MD),
+    AD = ifelse(Area == "CC", AD * 1000, AD),
+    RD = ifelse(Area == "CC", RD * 1000, RD)
+  )
+
+# 3. CÁLCULO DE PROMEDIOS
+MD_promedios <- MD_limpio %>%
+  group_by(Mouse, Sex, Diet, DiffusionTime, Area) %>%
+  summarise(
+    across(c(MD, AD, RD, AK, MK, RK, FA_DKI),
+           \(x) mean(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    DiffusionTime_num = as.numeric(as.character(DiffusionTime)),
+    Condicion = paste(ifelse(Sex=="Female", "fem", "male"), Diet)
+  )
+
+# 4. CONFIGURACIÓN ESTÉTICA PARA LOS GRÁFICOS
+parametros <- c("AD","MD","RD","AK","MK","RK","FA_DKI")
+
+colores_condicion <- c(
+  "fem HFHS"  = "green4",
+  "male HFHS" = "blue3",
+  "fem LFLS"  = "plum2",
+  "male LFLS" = "red3"
+)
+
+# 5. GENERACIÓN DEL PDF "graficas_cc3.pdf"
+pdf("graficas_NUEVAS_fijo.pdf", width = 12, height = 10)
+
+for(param in parametros){
+  
+  # ### NUEVO: Calculamos el rango global para este parámetro para fijar la escala Y
+  rango_y <- range(MD_promedios[[param]], na.rm = TRUE)
+  # Añadimos un pequeño margen del 5% para que los puntos no toquen el borde
+  margen <- diff(rango_y) * 0.05
+  limites_y <- c(rango_y[1] - margen, rango_y[2] + margen)
+
+  areas_presentes <- levels(droplevels(MD_promedios$Area))
+  lista_plots <- list()
+  
+  for(area_sel in areas_presentes){
+    
+    datos_area <- MD_promedios %>% filter(Area == area_sel)
+    
+    p <- ggplot(datos_area, aes(x = DiffusionTime_num, y = .data[[param]], 
+                                group = Mouse, color = Condicion)) +
+      geom_line(linewidth = 1) + 
+      geom_point(size = 2) + 
+      scale_color_manual(values = colores_condicion) +
+      scale_x_continuous(breaks = c(20, 25, 30, 35)) +
+      ### NUEVO: Aplicamos la escala fija calculada arriba
+      coord_cartesian(ylim = limites_y) + 
+      labs(title = paste("Área:", area_sel),
+           x = "Tiempo de difusión (ms)", 
+           y = param, 
+           color = "Condición:") +
+      theme_minimal() +
+      theme(
+        legend.position = "bottom",
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9, face = "bold"),
+        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size = 10)
+      ) +
+      guides(color = guide_legend(nrow = 1))
+    
+    lista_plots[[area_sel]] <- p
+  }
+  
+  # ... (el resto del código de organización por páginas y grid.arrange se mantiene igual)
+  n_plots <- length(lista_plots)
+  plots_por_pagina <- 4
+  num_paginas <- ceiling(n_plots / plots_por_pagina)
+  
+  for(pag in 1:num_paginas){
+    idx_inicio <- ((pag - 1) * plots_por_pagina) + 1
+    idx_fin <- min(pag * plots_por_pagina, n_plots)
+    
+    grid.arrange(grobs = lista_plots[idx_inicio:idx_fin], 
+                 ncol = 2, 
+                 nrow = 2,
+                 top = grid::textGrob(paste("Parámetro:", param, "- Pág", pag), 
+                                     gp = grid::gpar(fontsize = 16, font = 2)))
+  }
+}
+
+dev.off()

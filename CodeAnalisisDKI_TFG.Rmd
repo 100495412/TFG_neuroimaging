@@ -1,0 +1,182 @@
+
+```{r}
+library(lme4)
+library(car)
+library(emmeans)
+options(width = 200)  # Aumenta el ancho permitido de la consola
+options(contrasts = c("contr.sum", "contr.poly"))
+# ================================================================
+# 1. CONFIGURACIÓN DEL ANÁLISIS (MODIFICA AQUÍ)
+# ================================================================
+# Elige qué quieres analizar específicamente:
+
+sel_area    <- "CC"    # Opciones: "hip2", "hip", "Hyp", "Nac", "CC"
+sel_metrica <- "AK"      # Opciones: "AD","MD","RD","AK","MK","RK","FA_DKI"
+
+# Elige qué tiempos de difusión comparar (puedes poner los 4 o solo 2)
+sel_tiempos <- c("20", "25", "30", "35") 
+# ================================================================
+# 2. FILTRADO Y PREPARACIÓN DE DATOS
+# ================================================================
+df_analisis <- MD_promedios %>%
+  filter(Area == sel_area, DiffusionTime %in% sel_tiempos) %>%
+  mutate(DiffusionTime = droplevels(as.factor(DiffusionTime)),
+         Mouse = droplevels(as.factor(Mouse)))
+
+cat("\n======================================================")
+cat("\n ANÁLISIS ESTADÍSTICO:", sel_metrica, "en", sel_area)
+cat("\n COMPARACIÓN DE TIEMPOS DE DIFUSIÓN:", paste(sel_tiempos, collapse=", "))
+cat("\n======================================================\n")
+
+# ================================================================
+# 3. MODELO MIXTO Y ANOVA
+# ================================================================
+# Ajustamos el modelo: la métrica depende de la interacción entre 
+# Tiempo de Difusión, Dieta y Sexo, con el Mouse como efecto aleatorio.
+formula_lmm <- as.formula(paste(sel_metrica, "~ DiffusionTime * Diet * Sex + (1 | Mouse)"))
+modelo_mixto <- lmer(formula_lmm, data = df_analisis)
+
+# ANOVA Tipo 3: Para ver si las interacciones son significativas
+anova3 <- Anova(modelo_mixto, type = 3)
+Anova(modelo_mixto, type = 3)
+# ANOVA Tipo 2: Para ver efectos principales si no hay interacción
+anova2 <- Anova(modelo_mixto, type = 2)
+Anova(modelo_mixto, type = 2)
+
+print(as.data.frame(anova3))
+print(as.data.frame(anova2))
+
+# ================================================================
+# 4. ANÁLISIS POST-HOC (DETALLE DE DIFERENCIAS)
+# ================================================================
+cat("\n[3] ANÁLISIS POST-HOC (Comparaciones entre grupos):\n")
+interacciones <- rownames(anova3)[grepl(":", rownames(anova3))]
+hay_int_sig <- FALSE
+
+for(int in interacciones) {
+  if(anova3[int, "Pr(>Chisq)"] < 0.05) {
+    hay_int_sig <- TRUE
+    cat("\n>>> SIG. EN INTERACCIÓN:", int, "\n")
+    # Comparamos grupos usando corrección de FDR
+    print(pairs(emmeans(modelo_mixto, as.formula(paste("~", gsub(":", "|", int)))), adjust = "fdr"))
+  }
+}
+if(!hay_int_sig) cat("- No hay interacciones significativas significativas.\n")
+
+# ================================================================
+# 4.1 POST-HOC ESPECÍFICO PARA DIFFUSION TIME (Pedido por tutores)
+# ================================================================
+# Este bloque solo se activa si DiffusionTime es significativo (p < 0.05)
+# y sirve para ver exactamente qué tiempos son diferentes entre sí.
+
+if(anova2["DiffusionTime", "Pr(>Chisq)"] < 0.05) {
+  cat("\n>>> [!] POST-HOC PARA EFECTO PRINCIPAL: DiffusionTime\n")
+  cat("Detectada significancia global en el tiempo. Comparando parejas:\n")
+  
+  # Calculamos las comparaciones entre tiempos usando corrección FDR
+  ph_time <- emmeans(modelo_mixto, "DiffusionTime")
+  print(pairs(ph_time, adjust = "fdr"))
+} else {
+  cat("\n- El factor DiffusionTime no es significativo globalmente; no se requiere post-hoc adicional.\n")
+}
+# ================================================================
+# 4.2 POST-HOC: EFECTO DE LA DIETA SEGÚN EL TIEMPO (Inverso)
+# ================================================================
+# Solo se activa si la interacción DiffusionTime:Diet es significativa.
+# Compara LFLS vs HFHS para cada uno de los 4 tiempos.
+
+if(anova3["DiffusionTime:Diet", "Pr(>Chisq)"] < 0.05) {
+  cat("\n>>> [!] POST-HOC INVERSO: Comparando Dietas para cada Tiempo\n")
+  cat("¿En qué tiempos de difusión hay diferencias reales entre dietas?\n")
+  
+  # Fijamos el tiempo y comparamos las dietas
+  ph_dieta_por_tiempo <- emmeans(modelo_mixto, ~ Diet | DiffusionTime)
+  print(pairs(ph_dieta_por_tiempo, adjust = "fdr"))
+} else {
+  cat("\n- No hay interacción significativa DiffusionTime:Diet; no se requiere el post-hoc inverso.\n")
+}
+# ================================================================
+# 4.3 POST-HOC: DIFERENCIAS DE SEXO SEGÚN EL TIEMPO
+# ================================================================
+# Solo se activa si la interacción DiffusionTime:Sex es significativa.
+# Compara Machos vs Hembras para cada uno de los 4 tiempos.
+
+if(anova3["DiffusionTime:Sex", "Pr(>Chisq)"] < 0.05) {
+  cat("\n>>> [!] POST-HOC INVERSO: Comparando Sexos para cada Tiempo\n")
+  cat("¿En qué tiempos de difusión hay diferencias reales entre sexos?\n")
+  
+  # Fijamos el tiempo y comparamos los sexos
+  ph_sexo_por_tiempo <- emmeans(modelo_mixto, ~ Sex | DiffusionTime)
+  print(pairs(ph_sexo_por_tiempo, adjust = "fdr"))
+} else {
+  cat("\n- No hay interacción significativa DiffusionTime:Sex; no se requiere este post-hoc.\n")
+}
+# ================================================================
+# 4.4 POST-HOC DOBLE PARA INTERACCIÓN DIETA : SEXO
+# ================================================================
+
+if(anova3["Diet:Sex", "Pr(>Chisq)"] < 0.05) {
+  cat("\n>>> [!] INTERACCIÓN DIETA:SEXO DETECTADA\n")
+  
+  cat("\n--- A. ¿Cómo afecta la DIETA a cada sexo? ---\n")
+  # Fijamos Sexo, comparamos Dietas
+  print(pairs(emmeans(modelo_mixto, ~ Diet | Sex), adjust = "fdr"))
+  
+  cat("\n--- B. ¿Cómo de diferentes son los SEXOS en cada dieta? ---\n")
+  # Fijamos Dieta, comparamos Sexos
+  print(pairs(emmeans(modelo_mixto, ~ Sex | Diet), adjust = "fdr"))
+}
+# ================================================================
+# 4.5 POST-HOC ESPECÍFICOS PARA INTERACCIÓN TRIPLE (El desglose total)
+# ================================================================
+# Solo se activa si la interacción DiffusionTime:Diet:Sex es significativa.
+
+if(anova3["DiffusionTime:Diet:Sex", "Pr(>Chisq)"] < 0.05) {
+  cat("\n>>> [!] DESGLOSE DE INTERACCIÓN TRIPLE: DiffusionTime:Diet:Sex\n")
+  
+  cat("\n--- A. ¿Afecta la DIETA de forma distinta según Sexo y Tiempo? ---\n")
+  # Comparamos Dieta (LFLS vs HFHS) fijando Sexo y Tiempo
+  print(pairs(emmeans(modelo_mixto, ~ Diet | Sex * DiffusionTime), adjust = "fdr"))
+  
+  cat("\n--- B. ¿Hay DIFERENCIAS DE SEXO en cada Dieta y Tiempo? ---\n")
+  # Comparamos Sexo (Male vs Female) fijando Dieta y Tiempo
+  print(pairs(emmeans(modelo_mixto, ~ Sex | Diet * DiffusionTime), adjust = "fdr"))
+  
+  cat("\n--- C. ¿Cómo evoluciona el TIEMPO para cada combinación Dieta-Sexo? ---\n")
+  # Este es el que ya tenías en tu bucle for original, pero aquí queda ordenado
+  print(pairs(emmeans(modelo_mixto, ~ DiffusionTime | Diet * Sex), adjust = "fdr"))
+}
+# ================================================================
+# 5. TABLA DE PROMEDIOS (PARA TU MEMORIA/RESULTADOS)
+# ================================================================
+cat("\n[4] RESUMEN DE PROMEDIOS (Medias y SD):\n")
+
+# Extraemos las variables que resultaron significativas (p < 0.05) en Tipo 2
+vars_fijas <- c("DiffusionTime", "Diet", "Sex")
+hay_sig_fija <- FALSE
+
+for (v in vars_fijas) {
+  if (anova2[v, "Pr(>Chisq)"] < 0.05) {
+    hay_sig_fija <- TRUE
+    cat("\n>>> Promedios para la variable significativa:", v, "\n")
+    
+    resumen <- df_analisis %>%
+      group_by(.data[[v]]) %>%
+      summarise(
+        Media = mean(.data[[sel_metrica]], na.rm = TRUE),
+        Desv_Est = sd(.data[[sel_metrica]], na.rm = TRUE),
+        .groups = 'drop'
+      )
+    print(resumen)
+  }
+}
+
+if(!hay_sig_fija) cat("- Sin efectos fijos significativos en Tipo 2.\n")
+
+# Desglose completo por si quieres ver todos los grupos juntos
+cat("\n>>> Desglose completo (Time x Diet x Sex):\n")
+print(df_analisis %>%
+  group_by(DiffusionTime, Diet, Sex) %>%
+  summarise(Media = mean(.data[[sel_metrica]]), .groups = 'drop'))
+```
+
