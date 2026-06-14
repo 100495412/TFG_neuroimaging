@@ -1,0 +1,575 @@
++*In[56]:*+
+[source, ipython3]
+----
+pip install brkraw nibabel numpy tqdm
+----
+
+
++*Out[56]:*+
+----
+Requirement already satisfied: brkraw in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (0.3.11)
+Requirement already satisfied: nibabel in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (5.3.2)
+Requirement already satisfied: numpy in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (2.2.6)
+Requirement already satisfied: tqdm in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (4.67.3)
+Requirement already satisfied: pandas>=1.0.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw) (2.3.3)
+Requirement already satisfied: pillow>=7.1.1 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw) (11.3.0)
+Requirement already satisfied: openpyxl>=3.0.3 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw) (3.1.5)
+Requirement already satisfied: xlrd>=1.0.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw) (2.0.2)
+Requirement already satisfied: importlib-resources>=5.12 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel) (6.5.2)
+Requirement already satisfied: packaging>=20 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel) (25.0)
+Requirement already satisfied: typing-extensions>=4.6 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel) (4.15.0)
+Requirement already satisfied: colorama in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from tqdm) (0.4.6)
+Requirement already satisfied: et-xmlfile in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from openpyxl>=3.0.3->brkraw) (2.0.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw) (2025.3)
+Requirement already satisfied: six>=1.5 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from python-dateutil>=2.8.2->pandas>=1.0.0->brkraw) (1.17.0)
+Note: you may need to restart the kernel to use updated packages.
+----
+
+
++*In[57]:*+
+[source, ipython3]
+----
+!pip install brkraw==0.3.11
+
+----
+
+
++*Out[57]:*+
+----
+Requirement already satisfied: brkraw==0.3.11 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (0.3.11)
+Requirement already satisfied: nibabel>=3.0.2 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (5.3.2)
+Requirement already satisfied: numpy>=1.18.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (2.2.6)
+Requirement already satisfied: pandas>=1.0.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (2.3.3)
+Requirement already satisfied: pillow>=7.1.1 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (11.3.0)
+Requirement already satisfied: tqdm>=4.45.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (4.67.3)
+Requirement already satisfied: openpyxl>=3.0.3 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (3.1.5)
+Requirement already satisfied: xlrd>=1.0.0 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from brkraw==0.3.11) (2.0.2)
+Requirement already satisfied: importlib-resources>=5.12 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel>=3.0.2->brkraw==0.3.11) (6.5.2)
+Requirement already satisfied: packaging>=20 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel>=3.0.2->brkraw==0.3.11) (25.0)
+Requirement already satisfied: typing-extensions>=4.6 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from nibabel>=3.0.2->brkraw==0.3.11) (4.15.0)
+Requirement already satisfied: et-xmlfile in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from openpyxl>=3.0.3->brkraw==0.3.11) (2.0.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw==0.3.11) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw==0.3.11) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from pandas>=1.0.0->brkraw==0.3.11) (2025.3)
+Requirement already satisfied: six>=1.5 in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from python-dateutil>=2.8.2->pandas>=1.0.0->brkraw==0.3.11) (1.17.0)
+Requirement already satisfied: colorama in c:\users\estudiantes\anaconda3\envs\resomapper_env\lib\site-packages (from tqdm>=4.45.0->brkraw==0.3.11) (0.4.6)
+----
+
+
++*In[58]:*+
+[source, ipython3]
+----
+import sys
+
+REPO_PATH = r"C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\resomapper_dev-main\resomapper_dev-main"
+
+if REPO_PATH not in sys.path:
+    sys.path.insert(0, REPO_PATH)
+
+----
+
+
++*In[59]:*+
+[source, ipython3]
+----
+import sys
+import os
+import shutil
+from glob import glob
+
+# =========================
+# 1) CONFIGURACIÓN 
+# =========================
+
+# Carpeta del repo donde está resomapper
+REPO_PATH = r"C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\resomapper_dev-main\resomapper_dev-main"
+
+# Carpeta donde está tu estudio 
+ROOT_INPUT = r"C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107"
+
+# Carpeta de salida
+OUTPUT_DIR = r"C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107"
+
+
+# =========================
+# 2) VALIDACIONES BÁSICAS
+# =========================
+if not os.path.isdir(REPO_PATH):
+    raise FileNotFoundError(f"REPO_PATH no existe: {REPO_PATH}")
+
+if not os.path.isdir(ROOT_INPUT):
+    raise FileNotFoundError(f"ROOT_INPUT no existe: {ROOT_INPUT}")
+
+# Asegura imports desde el repo
+if REPO_PATH not in sys.path:
+    sys.path.insert(0, REPO_PATH)
+
+print("? Repo:", REPO_PATH)
+print("? Input root:", ROOT_INPUT)
+print("? Output:", OUTPUT_DIR)
+
+----
+
+
++*Out[59]:*+
+----
+? Repo: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\resomapper_dev-main\resomapper_dev-main
+? Input root: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107
+? Output: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107
+----
+
+
++*In[60]:*+
+[source, ipython3]
+----
+from resomapper_preprocessing import denoise, gibbs_suppress, n4_bias_field_correct
+import numpy as np
+import nibabel as nib
+import matplotlib.pyplot as plt
+from scipy.ndimage import rotate
+from resomapper_masking import manual_mask 
+----
+
+
++*In[61]:*+
+[source, ipython3]
+----
+
+# =========================
+# 3) ENCONTRAR CARPETA BRUKER 
+# ========================
+
+def find_bruker_study_folder(root):
+    for dirpath, dirnames, filenames in os.walk(root):
+        if "subject" in dirnames:
+            return dirpath
+        if "subject" in filenames:
+            return dirpath
+    return None
+
+bruker_study_path = find_bruker_study_folder(ROOT_INPUT)
+print("?? Carpeta Bruker detectada:", bruker_study_path)
+
+if bruker_study_path is None:
+    raise ValueError(
+    )
+
+try:
+    top = os.listdir(bruker_study_path)
+    print("?? 'subject' está en la carpeta?:", "subject" in top)
+    print("?? Contenido (top 20):", top[:20])
+except Exception as e:
+    print("?? No pude listar contenido de la carpeta detectada:", e)
+
+
+# =========================
+# 4) CONVERTIR SOLO ESE ESTUDIO
+# =========================
+from resomapper_bruker_conversion import convert_single_study_bruker
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+subj_sess_name = convert_single_study_bruker(bruker_study_path, OUTPUT_DIR)
+
+if subj_sess_name is None:
+
+    raise RuntimeError(
+
+    )
+
+print("\n? Conversión terminada.")
+print("?? Nombre sujeto/sesión:", subj_sess_name)
+
+# ========================
+# 5) MOSTRAR RESUMEN DE SALIDA
+# =========================
+
+out_subject_dir = os.path.join(OUTPUT_DIR, "sourcedata", subj_sess_name)
+print("\n?? Carpeta de salida:", out_subject_dir)
+
+if not os.path.isdir(out_subject_dir):
+    print("?? No encuentro la carpeta de salida esperada.")
+else:
+    for root, dirs, files in os.walk(out_subject_dir):
+        rel = os.path.relpath(root, out_subject_dir)
+        print(f"\n[{rel}]")
+        if dirs:
+            print("  dirs :", dirs)
+        if files:
+            preview = files[:15]
+            print("  files:", preview, ("..." if len(files) > 15 else ""))
+----
+
+
++*Out[61]:*+
+----
+?? Carpeta Bruker detectada: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\20240923_144013_G230924_R107_Tiemposdifusion_2_2_230924_1_1
+?? 'subject' está en la carpeta?: True
+?? Contenido (top 20): ['1', '11', '12', '14', '15', '17', '18', '2', '4', '8', '9', 'AdjResult', 'AdjStatePerStudy', 'ResultState', 'ScanProgram.scanProgram', 'subject']
+
+? Conversión terminada.
+?? Nombre sujeto/sesión: sub-G230924_R107_Tiemposdifusion_2_2_230924
+
+?? Carpeta de salida: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\sourcedata\sub-G230924_R107_Tiemposdifusion_2_2_230924
+
+[.]
+  dirs : ['anat', 'dwi', 'fmap', 'preproc']
+
+[anat]
+  files: ['sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-1_run-1_localizer.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-1_run-1_localizer.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w_mask.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w_masked.nii.gz'] 
+
+[dwi]
+  files: ['sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi.bval', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi.bvec', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi.bval', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi.bvec', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi.bval', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi.bvec', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi.bval', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi.bvec', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi.json'] ...
+
+[fmap]
+  files: ['sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-11_run-1_fmap.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-11_run-1_fmap.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-14_run-1_fmap.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-14_run-1_fmap.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-17_run-1_fmap.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-17_run-1_fmap.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-4_run-1_fmap.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-4_run-1_fmap.nii.gz', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-9_run-1_fmap.json', 'sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-9_run-1_fmap.nii.gz'] 
+
+[preproc]
+  dirs : ['dwi']
+
+[preproc\dwi]
+----
+
+
++*In[62]:*+
+[source, ipython3]
+----
+# =========================
+# 6) PREPROC AUTOMÁTICO SOLO DWI/DTI ? DERIVATIVES
+# =========================
+
+DERIV_ROOT = os.path.join(OUTPUT_DIR, "derivatives")
+DERIV_DWI  = os.path.join(DERIV_ROOT, "dwi")
+os.makedirs(DERIV_DWI, exist_ok=True)
+
+dwi_dir = os.path.join(out_subject_dir, "dwi")
+if not os.path.isdir(dwi_dir):
+    raise FileNotFoundError(f"No existe la carpeta dwi/: {dwi_dir}")
+
+dwi_files = sorted(glob(os.path.join(dwi_dir, "*_dwi.nii.gz")))
+
+if len(dwi_files) == 0:
+    raise FileNotFoundError(f"No encontré *_dwi.nii.gz en: {dwi_dir}")
+    
+print("\n?? DWI encontrados:")
+for f in dwi_files:
+    print("  -", os.path.basename(f))
+
+# =======================
+# AJUSTES
+# =======================
+
+DO_DENOISE = True
+DO_GIBBS   = True
+DO_N4      = False
+
+DENOISE_FILTER = "p"  # Patch2Self
+
+# =========================
+# PROCESAR
+# =========================
+
+for nifti_path in dwi_files:
+    base = os.path.basename(nifti_path).replace(".nii.gz", "")
+    print("\n?? Preprocesando:", base)
+
+    # Copiar bval/bvec
+    for ext in [".bval", ".bvec"]:
+        src = nifti_path.replace(".nii.gz", ext)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(DERIV_DWI, os.path.basename(src)))
+
+    current_path = nifti_path
+    # 1) DENOISE
+    if DO_DENOISE:
+        _, current_path, used_filter = denoise(
+            current_path,
+            modality="DTI",
+            output_folder=DERIV_DWI,
+            params="default",
+            selected_filter=DENOISE_FILTER
+        )
+        print("   ? Denoise:", used_filter)
+    # 2) GIBBS
+    if DO_GIBBS:
+        _, current_path = gibbs_suppress(
+            current_path,
+            unringed_nii_output_path=os.path.join(DERIV_DWI, base + "_preproc.nii.gz"),
+            check_params=False,
+        )
+        print("   ? Gibbs")
+    # 3) N4 
+    if DO_N4:
+        _, current_path, _ = n4_bias_field_correct(
+            current_path,
+            corrected_nii_output_path=os.path.join(DERIV_DWI, base + "_preproc.nii.gz"),
+            params=None,
+            check_params=False,
+        )
+        print("   ? N4")
+
+    final_path = os.path.join(DERIV_DWI, base + "_preproc.nii.gz")
+    if os.path.abspath(current_path) != os.path.abspath(final_path):
+        shutil.copy2(current_path, final_path)
+    print("? FINAL ->", os.path.basename(final_path))
+
+print("\n?? Preprocesado terminado.")
+print("?? Resultados en:", DERIV_DWI)
+
+----
+
+
++*Out[62]:*+
+----
+
+?? DWI encontrados:
+  - sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi.nii.gz
+  - sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi.nii.gz
+  - sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi.nii.gz
+  - sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi.nii.gz
+
+?? Preprocesando: sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi
+
+    ... applying p2s denoising filter
+
+                                                                                                                       
+   ? Denoise: p
+   ? Gibbs
+? FINAL -> sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi_preproc.nii.gz
+
+?? Preprocesando: sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi
+
+    ... applying p2s denoising filter
+
+                                                                                                                       
+   ? Denoise: p
+   ? Gibbs
+? FINAL -> sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-15_run-1_dwi_preproc.nii.gz
+
+?? Preprocesando: sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi
+
+    ... applying p2s denoising filter
+
+                                                                                                                       
+   ? Denoise: p
+   ? Gibbs
+? FINAL -> sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-18_run-1_dwi_preproc.nii.gz
+
+?? Preprocesando: sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi
+
+    ... applying p2s denoising filter
+
+                                                                                                                       
+   ? Denoise: p
+   ? Gibbs
+? FINAL -> sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-8_run-1_dwi_preproc.nii.gz
+
+?? Preprocesado terminado.
+?? Resultados en: C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\derivatives\dwi
+----
+
+
++*In[63]:*+
+[source, ipython3]
+----
+# =========================
+# 7) CREATE MASK
+# =========================
+
+def _as_manualmask_view(slice2d):
+    out = rotate(slice2d, 270, reshape=False)
+    out = np.flip(out, axis=1)
+    return out
+
+def preview_mask_inline_5slices_oriented_like_manual(image_path, mask_path, title="", vol_index=0, slices=None):
+    img_nii = nib.load(image_path)
+    msk_nii = nib.load(mask_path)
+
+    img = img_nii.get_fdata()
+    msk = msk_nii.get_fdata()
+
+    img3 = img[..., vol_index] if img.ndim == 4 else img
+    msk3 = msk[..., 0] if msk.ndim == 4 else msk
+
+    Z = img3.shape[2]
+    if slices is None:
+        sel = list(range(Z)) if Z <= 5 else np.linspace(0, Z - 1, 5).round().astype(int).tolist()
+    else:
+        sel = list(slices)[:5]
+
+    img3n = img3.astype(np.float32)
+    img3n -= img3n.min()
+    mx = img3n.max()
+    if mx > 0:
+        img3n /= mx
+
+    fig, axes = plt.subplots(1, len(sel), figsize=(3.2 * len(sel), 3.2))
+    if len(sel) == 1:
+        axes = [axes]
+
+    for ax, z in zip(axes, sel):
+        im2d = img3n[:, :, z]
+        mk2d = (msk3[:, :, z] > 0).astype(np.uint8)
+
+        im2d_v = _as_manualmask_view(im2d)
+        mk2d_v = _as_manualmask_view(mk2d)
+
+        ax.imshow(im2d_v, cmap="gray", origin="upper")  # aquí ya no hace falta .T
+        ax.contour(mk2d_v, levels=[0.5], colors="r", linewidths=1)
+        ax.set_title(f"z={z}")
+        ax.axis("off")
+        
+    fig.suptitle(title + (f" | vol {vol_index}" if img.ndim == 4 else ""), y=1.02)
+    plt.tight_layout()
+    plt.show()
+
+def ask_yes_no_text(prompt, default="y"):
+    default = default.lower()
+    suf = " [Y/n] " if default == "y" else " [y/N] "
+    ans = input(prompt + suf).strip().lower()
+    if ans == "":
+        ans = default
+    return ans in ("y", "yes", "s", "si", "sí")
+----
+
+
++*In[64]:*+
+[source, ipython3]
+----
+def manual_mask_with_preview(nifti_path, mask_path, title=""):
+    while True:
+        print("\n??? Dibuja la máscara (ventana OpenCV):")
+        manual_mask(nifti_path, mask_path, ask_if_repeat=False)
+        
+        preview_mask_inline_5slices_oriented_like_manual(nifti_path, mask_path, title=title, vol_index=0)
+
+        ok = ask_yes_no_text("¿La máscara está bien?", default="y")
+        if ok:
+            return True
+        else:
+            print("?? Repetimos el dibujo...")
+----
+
+
++*In[65]:*+
+[source, ipython3]
+----
+def apply_mask_and_save(image_path, mask_path, masked_output_path):
+    img_nii = nib.load(image_path)
+    msk_nii = nib.load(mask_path)
+
+    img = img_nii.get_fdata()
+    msk = msk_nii.get_fdata()
+
+    if img.ndim == 4 and msk.ndim == 3:
+        masked = img * msk[..., np.newaxis]
+    else:
+        masked = img * msk
+        
+    out = nib.Nifti1Image(masked.astype(np.float32), img_nii.affine, img_nii.header)
+    nib.save(out, masked_output_path)
+----
+
+
++*In[66]:*+
+[source, ipython3]
+----
+
+# =========================
+# T2w MASK -> guardar en anat/
+# =========================
+anat_dir = os.path.join(out_subject_dir, "anat")
+anat_niis = sorted(glob(os.path.join(anat_dir, "*.nii.gz")))
+
+if not anat_niis:
+    print("No hay NIfTI en anat/")
+else:
+
+    t2_candidates = [p for p in anat_niis if "t2w" in os.path.basename(p).lower()]
+    t2w_path = t2_candidates[0] if t2_candidates else anat_niis[0]
+
+    base = os.path.basename(t2w_path).replace(".nii.gz", "")
+    t2_mask   = os.path.join(anat_dir, base + "_mask.nii.gz")
+    t2_masked = os.path.join(anat_dir, base + "_masked.nii.gz")
+
+    manual_mask_with_preview(t2w_path, t2_mask, title=os.path.basename(t2w_path))
+    apply_mask_and_save(t2w_path, t2_mask, t2_masked)
+
+    print("? T2w mask   ->", t2_mask)
+    print("? T2w masked ->", t2_masked)
+
+
+# =========================
+# DWI Mask-> guardar en preproc/dwi/
+# =========================
+
+preproc_dwi_dir = os.path.join(out_subject_dir, "preproc", "dwi")
+raw_dwi_dir     = os.path.join(out_subject_dir, "dwi")
+os.makedirs(preproc_dwi_dir, exist_ok=True)
+
+dwi_files = sorted(glob(os.path.join(preproc_dwi_dir, "*_preproc.nii.gz")))
+if not dwi_files:
+    dwi_files = sorted(glob(os.path.join(raw_dwi_dir, "*_dwi.nii.gz")))
+
+if not dwi_files:
+    print("?? No encontré DWI ni en preproc/dwi/ ni en dwi/")
+else:
+
+    dwi_path = dwi_files[0]
+    base = os.path.basename(dwi_path).replace(".nii.gz", "")
+    dwi_mask   = os.path.join(preproc_dwi_dir, base + "_mask.nii.gz")
+    dwi_masked = os.path.join(preproc_dwi_dir, base + "_masked.nii.gz")
+
+    manual_mask_with_preview(dwi_path, dwi_mask, title=os.path.basename(dwi_path))
+    apply_mask_and_save(dwi_path, dwi_mask, dwi_masked)
+
+    print("? DWI mask   ->", dwi_mask)
+    print("? DWI masked ->", dwi_masked)
+
+
+----
+
+
++*Out[66]:*+
+----
+
+??? Dibuja la máscara (ventana OpenCV):
+
+[[?]] Please create the mask for this study in the pop-up window
+- Left click: create lines between clicks to draw the mask outline
+- Rigth click: close the outline joining the first and last points and skip to next slice
+
+
+¿La máscara está bien? [Y/n]  y
+
+? T2w mask   -> C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\sourcedata\sub-G230924_R107_Tiemposdifusion_2_2_230924\anat\sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w_mask.nii.gz
+? T2w masked -> C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\sourcedata\sub-G230924_R107_Tiemposdifusion_2_2_230924\anat\sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-2_run-1_T2w_masked.nii.gz
+
+??? Dibuja la máscara (ventana OpenCV):
+
+[[?]] Please create the mask for this study in the pop-up window
+- Left click: create lines between clicks to draw the mask outline
+- Rigth click: close the outline joining the first and last points and skip to next slice
+
+
+¿La máscara está bien? [Y/n]  y
+
+? DWI mask   -> C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\sourcedata\sub-G230924_R107_Tiemposdifusion_2_2_230924\preproc\dwi\sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi_mask.nii.gz
+? DWI masked -> C:\Users\Estudiantes\Desktop\Estudio_tiemposdedifusion\R107\sourcedata\sub-G230924_R107_Tiemposdifusion_2_2_230924\preproc\dwi\sub-G230924_R107_Tiemposdifusion_2_2_230924_acq-12_run-1_dwi_masked.nii.gz
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
