@@ -1,0 +1,131 @@
+rm(list = ls())
+cat("\014")
+
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(readxl)
+
+# ===============================
+# 1. DATA LOADING (SANDI CC)
+# ===============================
+MD_OUT <- read_excel(file.choose())
+MD_limpio <- MD_OUT
+
+# ===============================
+# 2. VARIABLE FORMATTING AND ROI MERGING
+# ===============================
+MD_limpio$MouseID <- as.factor(MD_limpio$MouseID)
+
+MD_limpio$Sex <- factor(MD_limpio$Sex,
+                        levels = c(1,2),
+                        labels = c("Male","Female"))
+
+MD_limpio$Diet <- factor(MD_limpio$Diet,
+                         levels = c(1,2),
+                         labels = c("LFLS","HFHS"))
+
+MD_limpio$ROI <- factor(MD_limpio$ROI,
+                        levels = c(1, 2, 3),
+                        labels = c("Hippocampus (Hip2)", "Hippocampus (Hip2)", "Corpus Callosum (CC)"))
+
+# ===============================
+# 3. MOUSE AVERAGING AND CONDITION MAPPING
+# ===============================
+MD_promedios <- MD_limpio %>%
+  group_by(MouseID, Sex, Diet, ROI) %>%
+  summarise(
+    across(c(di, de, f, fs, rs), \(x) mean(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Condicion = factor(paste(Sex, Diet),
+                       levels = c("Female LFLS", "Female HFHS", "Male LFLS", "Male HFHS"),
+                       labels = c("Fem LFLS", "Fem HFHS", "Male LFLS", "Male HFHS"))
+  )
+
+# ===============================
+# 4. SCIENTIFIC METRICS AND UNITS MAPPING
+# ===============================
+parametros <- c("di", "de", "f", "fs", "rs")
+
+nombres_metricas <- c(
+  "di" = "Intrinsic Intracellular Diffusivity (Dintra)",
+  "de" = "Extra-Cellular Diffusivity (Dextra)",
+  "f"  = "Intracellular Neurite Fraction (fneurite)",
+  "fs" = "Intracellular Soma Fraction (fsoma)",
+  "rs" = "Effective Soma Radius (Rsoma)"
+)
+
+unidades_metricas <- c(
+  "di" = "Di (ÂµmÂ²/ms)",
+  "de" = "De (ÂµmÂ²/ms)",
+  "f"  = "f ",
+  "fs" = "fs",
+  "rs" = "Rs (Âµm)"
+)
+
+colores_condicion <- c(
+  "Fem LFLS"  = "plum2",
+  "Fem HFHS"  = "green4",
+  "Male LFLS" = "red3",
+  "Male HFHS" = "blue3"
+)
+
+# ===============================
+# 5. PDF GENERATION (1x2 Horizontal Layout)
+# ===============================
+ruta_pdf <- "C:/Users/lolan/Downloads/SANDI/Resultados_SANDI_CC/finalgraphs_SANDI_TFG.pdf"
+pdf(ruta_pdf, width = 12, height = 6) 
+
+for(param in parametros){
+  
+  areas_presentes <- levels(droplevels(MD_promedios$ROI))
+  lista_plots <- list()
+  
+  for(area_sel in areas_presentes){
+    
+    datos_area <- MD_promedios %>% filter(ROI == area_sel)
+    
+    p <- ggplot(datos_area,
+                aes(x = Condicion,
+                    y = .data[[param]],
+                    fill = Condicion)) +
+      
+      geom_boxplot(alpha = 0.4, outlier.shape = NA, width = 0.5, color = "grey30") +
+      geom_jitter(width = 0.15, height = 0, size = 3.8, aes(color = Condicion), alpha = 0.9) +
+      
+      scale_fill_manual(values = colores_condicion) +
+      scale_color_manual(values = colores_condicion) +
+      
+      labs(title = area_sel,
+           x = "Experimental Group",
+           y = unidades_metricas[[param]]) +
+      
+      theme_minimal() +
+      theme(
+        legend.position = "none",
+        plot.title = element_text(face = "bold", size = 13, hjust = 0.5, color = "grey10"),
+        axis.title.x = element_text(size = 11, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 11, margin = margin(r = 10)),
+        axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 10, face = "bold"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey92")
+      )
+    
+    lista_plots[[area_sel]] <- p
+  }
+  
+  grid.arrange(
+    grobs = lista_plots,
+    ncol = 2,  
+    nrow = 1,  
+    top = grid::textGrob(
+      nombres_metricas[[param]],
+      gp = grid::gpar(fontsize = 16, font = 2, col = "black")
+    )
+  )
+}
+
+dev.off()
+cat(paste('\n[SUCCESS] SANDI PDF generated successfully at:', ruta_pdf, '!\n'))
